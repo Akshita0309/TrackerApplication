@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Roadmap Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--ink:#14213d;--mute:#5d6b86;--line:#d5dbe7;--acc:#2b4cff;--accink:#fff;--hl:#e3e9ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1524;--panel:#192138;--ink:#e8ecf7;--mute:#97a3bf;--line:#2c3757;--acc:#7b93ff;--accink:#0f1524;--hl:#232e52}}
+:root[data-theme="dark"]{--bg:#0f1524;--panel:#192138;--ink:#e8ecf7;--mute:#97a3bf;--line:#2c3757;--acc:#7b93ff;--accink:#0f1524;--hl:#232e52}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 'Bricolage Grotesque',system-ui,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+#title{font:800 clamp(24px,4vw,36px)/1.1 inherit;font-family:inherit;color:var(--ink);background:transparent;border:0;border-bottom:2px solid transparent;padding:2px 0;min-width:0;flex:1 1 280px}
+#title:hover,#title:focus{border-bottom-color:var(--line);outline:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+button.on{background:var(--hl);border-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+.streams{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);font-size:13px}
+.chip i{width:9px;height:9px;border-radius:50%}
+.chip button{border:0;background:none;padding:0 4px;color:var(--mute)}
+.streams input{width:150px;padding:4px 10px;font-size:13px;border-radius:99px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.grid.rows{grid-template-columns:110px repeat(3,minmax(220px,1fr))}
+.colh{font-weight:800;font-size:18px;padding:4px 2px}
+.colh small{display:block;font-weight:400;font-size:12px;color:var(--mute)}
+.cell{background:color-mix(in srgb,var(--panel) 55%,transparent);border:1px dashed var(--line);border-radius:12px;padding:8px;min-height:90px;display:flex;flex-direction:column;gap:8px}
+.cell.over{background:var(--hl);border-color:var(--acc)}
+.rowh{font-weight:600;font-size:13px;padding-top:10px;display:flex;gap:6px;align-items:flex-start}
+.rowh i{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none}
+.card{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:6px 10px 10px 6px;padding:9px 11px;cursor:grab}
+.card.drag{opacity:.4}
+.card h3{margin:0;font-size:15px;font-weight:600}
+.card p{margin:4px 0 0;color:var(--mute);font-size:13px;white-space:pre-wrap}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:12px;color:var(--mute);gap:6px}
+.st{padding:1px 8px;border-radius:99px;border:1px solid var(--line)}
+.st.progress{background:var(--hl);border-color:var(--acc);color:var(--ink)}
+.st.done{text-decoration:line-through}
+.add{border:1px dashed var(--line);background:none;color:var(--mute);font-size:13px}
+.empty{color:var(--mute);text-align:center;padding:36px 12px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);width:min(440px,92vw);padding:20px}
+dialog::backdrop{background:rgba(10,15,30,.5)}
+dialog label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;gap:8px;justify-content:space-between;margin-top:18px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <input id="title" aria-label="Roadmap title" value="Product roadmap">
+  <div class="bar">
+    <button id="vb" class="on">Lanes</button>
+    <button id="vs">By stream</button>
+    <button id="md">Copy as Markdown</button>
+    <button id="exp">Export JSON</button>
+    <button id="imp">Import JSON</button>
+    <button id="new" class="pri">Add item</button>
+  </div>
+</header>
+<div class="streams" id="streams"></div>
+<div id="view"></div>
+</main>
+
+<dialog id="dlg">
+  <form method="dialog" id="f" style="margin:0">
+    <h2 id="dh" style="margin:0 0 4px;font-size:20px">Add item</h2>
+    <label for="it">Title</label><input id="it" required maxlength="80">
+    <label for="in">Notes</label><textarea id="in" rows="3"></textarea>
+    <div class="two">
+      <div><label for="il">Timeframe</label><select id="il"></select></div>
+      <div><label for="is">Status</label><select id="ist"><option value="planned">Planned</option><option value="progress">In progress</option><option value="done">Done</option></select></div>
+    </div>
+    <label for="isx">Stream</label><select id="isx"></select>
+    <div class="acts">
+      <button type="button" id="del">Delete</button>
+      <span style="display:flex;gap:8px"><button type="button" id="cx">Cancel</button><button class="pri" id="sv">Save</button></span>
+    </div>
+  </form>
+</dialog>
+<input type="file" id="file" accept=".json" hidden>
+<div id="toast" role="status"></div>
+
+<script>
+const LANES=[{id:'now',n:'Now',s:'In flight this month'},{id:'next',n:'Next',s:'Planned in the coming months'},{id:'later',n:'Later',s:'Ideas worth keeping'}];
+const COLORS=['#2b4cff','#0f9d75','#e0831b','#c2410c','#8b3fd9','#0e7490','#be185d'];
+const ST={planned:'Planned',progress:'In progress',done:'Done'};
+const KEY='roadmap-builder-v1';
+const uid=()=>Math.random().toString(36).slice(2,9);
+let S={title:'Product roadmap',streams:[{id:'s1',name:'Core product',color:COLORS[0]},{id:'s2',name:'Growth',color:COLORS[1]},{id:'s3',name:'Platform',color:COLORS[2]}],
+items:[{id:uid(),title:'Redesign onboarding',notes:'Cut setup to three steps',lane:'now',stream:'s1',status:'progress'},
+{id:uid(),title:'Referral program',notes:'',lane:'next',stream:'s2',status:'planned'},
+{id:uid(),title:'Public API v2',notes:'Webhooks and rate limits',lane:'next',stream:'s3',status:'planned'},
+{id:uid(),title:'Mobile app',notes:'',lane:'later',stream:'s1',status:'planned'}]};
+let view='lanes',editId=null,dragId=null,defLane='now',defStream='s1';
+try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const stream=id=>S.streams.find(x=>x.id===id)||{name:'No stream',color:'#888'};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+
+function card(it){const s=stream(it.stream);
+return `<div class="card" draggable="true" tabindex="0" data-id="${it.id}" style="--c:${s.color}"><h3>${esc(it.title)}</h3>${it.notes?`<p>${esc(it.notes)}</p>`:''}<div class="meta"><span>${esc(s.name)}</span><span class="st ${it.status}">${ST[it.status]}</span></div></div>`}
+function cell(lane,sid){const list=S.items.filter(i=>i.lane===lane&&(sid==null||i.stream===sid));
+return `<div class="cell" data-lane="${lane}" ${sid!=null?`data-stream="${sid}"`:''}>${list.map(card).join('')}<button class="add" data-add="${lane}" data-s="${sid||''}">Add item</button></div>`}
+function render(){
+ $('title').value=S.title;
+ $('streams').innerHTML=S.streams.map(s=>`<span class="chip"><i style="background:${s.color}"></i>${esc(s.name)}<button data-rs="${s.id}" aria-label="Remove ${esc(s.name)}">×</button></span>`).join('')+`<input id="ns" placeholder="New stream, then Enter" aria-label="New stream name">`;
+ const heads=LANES.map(l=>`<div class="colh">${l.n}<small>${l.s}</small></div>`).join('');
+ let h;
+ if(!S.items.length&&view==='lanes'){h=`<div class="empty">No items yet. Add your first initiative to start the roadmap.</div>`}
+ if(view==='lanes'){h=`<div class="grid">${heads}${LANES.map(l=>cell(l.id)).join('')}</div>`}
+ else{h=`<div class="grid rows"><div></div>${heads}${S.streams.map(s=>`<div class="rowh"><i style="background:${s.color}"></i>${esc(s.name)}</div>${LANES.map(l=>cell(l.id,s.id)).join('')}`).join('')}</div>`}
+ $('view').innerHTML=h;
+ $('vb').classList.toggle('on',view==='lanes');$('vs').classList.toggle('on',view==='streams');
+ save();
+}
+function openDlg(id,lane,sid){
+ editId=id;const it=id&&S.items.find(i=>i.id===id);
+ $('dh').textContent=it?'Edit item':'Add item';
+ $('il').innerHTML=LANES.map(l=>`<option value="${l.id}">${l.n}</option>`).join('');
+ $('isx').innerHTML=S.streams.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+ $('it').value=it?it.title:'';$('in').value=it?it.notes:'';
+ $('il').value=it?it.lane:(lane||defLane);$('ist').value=it?it.status:'planned';
+ $('isx').value=it?it.stream:(sid||(S.streams[0]&&S.streams[0].id)||'');
+ $('del').style.visibility=it?'visible':'hidden';
+ $('dlg').showModal();$('it').focus();
+}
+$('f').addEventListener('submit',e=>{
+ const t=$('it').value.trim();if(!t){e.preventDefault();return}
+ const d={title:t,notes:$('in').value.trim(),lane:$('il').value,status:$('ist').value,stream:$('isx').value};
+ if(editId)Object.assign(S.items.find(i=>i.id===editId),d);else S.items.push({id:uid(),...d});
+ render();
+});
+$('cx').onclick=()=>$('dlg').close();
+$('del').onclick=()=>{S.items=S.items.filter(i=>i.id!==editId);$('dlg').close();render();toast('Item deleted')};
+$('new').onclick=()=>openDlg();
+$('vb').onclick=()=>{view='lanes';render()};
+$('vs').onclick=()=>{view='streams';render()};
+$('title').oninput=e=>{S.title=e.target.value;save()};
+
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-add]');if(a){openDlg(null,a.dataset.add,a.dataset.s);return}
+ const r=e.target.closest('[data-rs]');if(r){
+  if(S.items.some(i=>i.stream===r.dataset.rs)){toast('Move or delete this stream\u2019s items first');return}
+  S.streams=S.streams.filter(s=>s.id!==r.dataset.rs);render();return}
+ const c=e.target.closest('.card');if(c)openDlg(c.dataset.id);
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.id==='ns'&&e.target.value.trim()){
+  S.streams.push({id:uid(),name:e.target.value.trim(),color:COLORS[S.streams.length%COLORS.length]});render();$('ns').focus()}
+ if(e.key==='Enter'&&e.target.classList.contains('card'))openDlg(e.target.dataset.id);
+});
+document.addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c)return;dragId=c.dataset.id;c.classList.add('drag');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId)});
+document.addEventListener('dragend',()=>{dragId=null;document.querySelectorAll('.drag,.over').forEach(x=>x.classList.remove('drag','over'))});
+document.addEventListener('dragover',e=>{const c=e.target.closest('.cell');if(c&&dragId){e.preventDefault();document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));c.classList.add('over')}});
+document.addEventListener('drop',e=>{const c=e.target.closest('.cell');if(!c||!dragId)return;e.preventDefault();
+ const it=S.items.find(i=>i.id===dragId);it.lane=c.dataset.lane;if(c.dataset.stream)it.stream=c.dataset.stream;render()});
+
+$('md').onclick=async()=>{
+ let m=`# ${S.title}\n\n`;
+ LANES.forEach(l=>{m+=`## ${l.n}\n`;const li=S.items.filter(i=>i.lane===l.id);
+  m+=li.length?li.map(i=>`- **${i.title}** (${stream(i.stream).name}, ${ST[i.status].toLowerCase()})${i.notes?` \u2013 ${i.notes.replace(/\n/g,' ')}`:''}`).join('\n')+'\n\n':'_Nothing yet_\n\n'});
+ try{await navigator.clipboard.writeText(m);toast('Markdown copied')}catch(e){const w=document.createElement('textarea');w.value=m;document.body.appendChild(w);w.select();try{document.execCommand('copy');toast('Markdown copied')}catch(x){toast('Copy failed')}w.remove()}
+};
+$('exp').onclick=()=>{const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='roadmap.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.items)||!Array.isArray(d.streams))throw 0;S=d;render();toast('Roadmap imported')}catch(x){toast('That file is not a roadmap export')}};r.readAsText(f);e.target.value=''};
+render();
+</script>
+</body>
+</html>

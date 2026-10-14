@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Research Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--ink:#14213d;--mute:#5d6b86;--line:#d5dbe7;--acc:#2b4cff;--accink:#fff;--hl:#e3e9ff;--ok:#0f9d75;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1524;--panel:#192138;--ink:#e8ecf7;--mute:#97a3bf;--line:#2c3757;--acc:#7b93ff;--accink:#0f1524;--hl:#232e52;--ok:#3ccf9f}}
+:root[data-theme="dark"]{--bg:#0f1524;--panel:#192138;--ink:#e8ecf7;--mute:#97a3bf;--line:#2c3757;--acc:#7b93ff;--accink:#0f1524;--hl:#232e52;--ok:#3ccf9f}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 'Bricolage Grotesque',system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 56px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,textarea{background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;width:100%}
+input:hover,textarea:hover,input:focus,textarea:focus{border-color:var(--line);background:var(--panel)}
+#title{font:800 clamp(24px,4vw,34px)/1.15 inherit;font-family:inherit}
+#goal{color:var(--mute);margin-bottom:14px}
+.pbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.pbar select,.pbar input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:auto}
+.pbar #pj{flex:1 1 220px;font-weight:600}
+.pbar #pn{flex:1 1 150px}
+.top{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.big{font-weight:800;font-size:34px;line-height:1}
+.bar{height:8px;border-radius:99px;background:var(--hl);overflow:hidden;flex:1;min-width:120px}
+.bar b{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.sh{display:flex;gap:8px;align-items:center;padding:10px 12px}
+.sh .tg{border:0;background:none;padding:2px 6px;color:var(--mute);transition:transform .15s}
+.sec.closed .tg{transform:rotate(-90deg)}
+.sec.closed .body{display:none}
+.sh input{font-weight:600;font-size:17px}
+.cnt{font-size:12px;color:var(--mute);white-space:nowrap}
+.sec .bar{max-width:90px;flex:none;min-width:70px}
+.row{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px;align-items:center;padding:4px 12px;border-top:1px solid var(--line)}
+.st{min-width:92px;font-size:12px;padding:3px 8px;border-radius:99px}
+.st.reading{background:var(--hl);border-color:var(--acc)}
+.st.done{background:var(--ok);color:var(--accink);border-color:var(--ok)}
+.row.done .t{text-decoration:line-through;color:var(--mute)}
+.x{border:0;background:none;color:var(--mute);padding:4px 8px}
+.nt{grid-column:2/-1;margin-bottom:6px}
+.nt textarea{font-size:13px;color:var(--mute);resize:vertical}
+.foot{padding:8px 12px;border-top:1px solid var(--line);display:flex;gap:8px}
+.foot input{border-color:var(--line)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tools input{width:240px;border-color:var(--line);background:var(--panel)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main>
+<div class="pbar">
+  <select id="pj" aria-label="Switch project"></select>
+  <button class="pri" id="pdone">Mark complete &amp; move on</button>
+  <button id="pdel">Delete project</button>
+  <input id="pn" placeholder="New project name" aria-label="New project name">
+  <select id="pt" aria-label="Start new project from"><option value="blank">Blank</option><option value="copy">Copy sections from this project</option><option value="ai">Gen AI starter</option></select>
+  <button id="pnew">Create project</button>
+</div>
+<input id="title" aria-label="Research title" value="Generative AI research">
+<input id="goal" aria-label="Goal" placeholder="Add your goal or deadline here">
+<div class="top">
+  <div><div class="big" id="pct">0%</div><div class="cnt" id="sub"></div></div>
+  <div class="bar" aria-hidden="true"><b id="pb"></b></div>
+  <button id="md">Copy progress as Markdown</button>
+</div>
+<div id="secs"></div>
+<div class="tools">
+  <input id="ns" placeholder="New section name" aria-label="New section name">
+  <button class="pri" id="as">Add section</button>
+  <button id="reset">Reset to starter plan</button>
+</div>
+</main>
+<div id="toast" role="status"></div>
+<script>
+const KEY='research-tracker-v2';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const NEXT={todo:'reading',reading:'done',done:'todo'};
+const LBL={todo:'To do',reading:'In progress',done:'Done'};
+const mk=(n,ts)=>({id:uid(),name:n,open:true,topics:ts.map(t=>({id:uid(),t,s:'todo',n:'',showN:false}))});
+const starter=()=>({title:'Generative AI research',goal:'',secs:[
+ mk('Foundations',['Neural networks and backpropagation','Attention and the transformer','Tokenization and embeddings']),
+ mk('Large language models',['Pretraining and scaling laws','Fine-tuning and instruction tuning','RLHF and preference optimization']),
+ mk('Prompting and retrieval',['Prompt engineering patterns','Retrieval-augmented generation','Context windows and long-context methods']),
+ mk('Image and multimodal',['Diffusion models','Vision-language models','Audio and video generation']),
+ mk('Agents and tools',['Tool use and function calling','Agent frameworks and planning']),
+ mk('Evaluation and safety',['Benchmarks and evals','Hallucination and reliability','Alignment, bias and governance'])]});
+let DB;
+try{const r=localStorage.getItem(KEY);if(r)DB=JSON.parse(r);else{const o=localStorage.getItem('research-tracker-v1');if(o)DB={cur:'p1',projects:[{id:'p1',done:false,...JSON.parse(o)}]}}}catch(e){}
+if(!DB||!DB.projects||!DB.projects.length)DB={cur:'p1',projects:[{id:'p1',done:false,...starter()}]};
+let S=DB.projects.find(p=>p.id===DB.cur)||DB.projects[0];
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+const mkProj=(name,kind)=>{let secs=[];
+ if(kind==='copy')secs=S.secs.map(s=>({id:uid(),name:s.name,open:true,topics:s.topics.map(t=>({id:uid(),t:t.t,s:'todo',n:'',showN:false}))}));
+ if(kind==='ai')secs=starter().secs;
+ return{id:uid(),title:name,goal:'',done:false,secs}};
+function renderProj(){
+ $('pj').innerHTML=DB.projects.map(p=>{const a=stat(p.secs.flatMap(s=>s.topics));const pc=a.n?Math.round(a.d/a.n*100):0;
+  return `<option value="${p.id}" ${p.id===S.id?'selected':''}>${p.done?'\u2713 ':''}${esc(p.title||'Untitled')} (${pc}%)</option>`}).join('');
+ $('pdone').textContent=S.done?'Reopen project':'Mark complete & move on';
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+const stat=ts=>({d:ts.filter(x=>x.s==='done').length,n:ts.length});
+function progress(){
+ const all=S.secs.flatMap(s=>s.topics),a=stat(all),p=a.n?Math.round(a.d/a.n*100):0;
+ $('pct').textContent=p+'%';$('pb').style.width=p+'%';$('sub').textContent=`${a.d} of ${a.n} topics done`+(S.done?', project complete':'');renderProj();
+ S.secs.forEach(s=>{const c=stat(s.topics),e=document.querySelector(`[data-sec="${s.id}"]`);if(!e)return;
+  e.querySelector('.cnt').textContent=`${c.d}/${c.n}`;e.querySelector('.bar b').style.width=(c.n?c.d/c.n*100:0)+'%'});
+ save();
+}
+function topic(t){return `<div class="row ${t.s}" data-t="${t.id}"><button class="st ${t.s}" data-act="st" aria-label="Change status">${LBL[t.s]}</button><input class="t" data-f="t" value="${esc(t.t)}" aria-label="Topic"><button class="x" data-act="nt" aria-label="Toggle notes" title="Notes">${t.n?'\u270E':'\u2026'}</button><button class="x" data-act="dt" aria-label="Delete topic">\u00D7</button>${t.showN?`<div class="nt"><textarea data-f="n" rows="3" placeholder="Notes, links, papers to read">${esc(t.n)}</textarea></div>`:''}</div>`}
+function render(){
+ $('title').value=S.title;$('goal').value=S.goal||'';
+ $('secs').innerHTML=S.secs.length?S.secs.map(s=>`<section class="sec ${s.open?'':'closed'}" data-sec="${s.id}"><div class="sh"><button class="tg" data-act="tg" aria-label="Collapse section">\u25BE</button><input data-f="name" value="${esc(s.name)}" aria-label="Section name"><span class="cnt"></span><div class="bar" aria-hidden="true"><b></b></div><button class="x" data-act="ds" aria-label="Delete section">\u00D7</button></div><div class="body">${s.topics.map(topic).join('')}<div class="foot"><input placeholder="Add a topic and press Enter" data-f="new" aria-label="New topic"></div></div></section>`).join(''):'<p style="color:var(--mute);text-align:center;padding:30px">No sections yet. Add one below to start tracking.</p>';
+ progress();
+}
+const find=e=>{const se=e.closest('[data-sec]');const s=se&&S.secs.find(x=>x.id===se.dataset.sec);const te=e.closest('[data-t]');return{s,t:te&&s&&s.topics.find(x=>x.id===te.dataset.t)}};
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;const{s,t}=find(b),a=b.dataset.act;
+ if(a==='st'){t.s=NEXT[t.s];render()}
+ else if(a==='nt'){t.showN=!t.showN;render()}
+ else if(a==='dt'){s.topics=s.topics.filter(x=>x!==t);render()}
+ else if(a==='tg'){s.open=!s.open;render()}
+ else if(a==='ds'){if(s.topics.length&&!b.dataset.sure){b.dataset.sure=1;b.textContent='Sure?';b.style.color='crimson';setTimeout(()=>render(),2500);return}S.secs=S.secs.filter(x=>x!==s);render()}
+});
+document.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f||f==='new')return;const{s,t}=find(e.target);
+ if(f==='t')t.t=e.target.value;else if(f==='n')t.n=e.target.value;else if(f==='name')s.name=e.target.value;save()});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.dataset.f==='new'&&e.target.value.trim()){const{s}=find(e.target);s.topics.push({id:uid(),t:e.target.value.trim(),s:'todo',n:'',showN:false});render();
+  document.querySelector(`[data-sec="${s.id}"] [data-f="new"]`).focus()}
+ if(e.key==='Enter'&&e.target.id==='ns')$('as').click();
+ if(e.key==='Enter'&&e.target.id==='pn')$('pnew').click()});
+const addSec=()=>{const v=$('ns').value.trim();if(!v)return;S.secs.push({id:uid(),name:v,open:true,topics:[]});$('ns').value='';render()};
+$('as').onclick=addSec;
+$('title').oninput=e=>{S.title=e.target.value;save();renderProj()};
+$('goal').oninput=e=>{S.goal=e.target.value;save()};
+$('reset').onclick=e=>{if(!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Click again to confirm';setTimeout(()=>{delete e.target.dataset.sure;e.target.textContent='Reset to starter plan'},2500);return}
+ Object.assign(S,starter());delete e.target.dataset.sure;e.target.textContent='Reset to starter plan';render();toast('Starter plan restored')};
+$('md').onclick=async()=>{
+ const all=S.secs.flatMap(s=>s.topics),a=stat(all);
+ let m=`# ${S.title}\n${S.goal?S.goal+'\n':''}\nProgress: ${a.d}/${a.n} topics\n\n`;
+ S.secs.forEach(s=>{const c=stat(s.topics);m+=`## ${s.name} (${c.d}/${c.n})\n`+s.topics.map(t=>`- [${t.s==='done'?'x':' '}] ${t.t}${t.s==='reading'?' (in progress)':''}${t.n?' \u2013 '+t.n.replace(/\n/g,' '):''}`).join('\n')+'\n\n'});
+ try{await navigator.clipboard.writeText(m);toast('Progress copied')}catch(x){toast('Copy failed')}};
+$('pj').onchange=e=>{DB.cur=e.target.value;S=DB.projects.find(p=>p.id===DB.cur);render()};
+$('pnew').onclick=()=>{const n=$('pn').value.trim();if(!n){$('pn').focus();return}
+ const p=mkProj(n,$('pt').value);DB.projects.push(p);DB.cur=p.id;S=p;$('pn').value='';render();toast('Project created')};
+$('pdone').onclick=()=>{
+ if(S.done){S.done=false;render();return}
+ S.done=true;const nx=DB.projects.find(p=>!p.done);
+ if(nx){DB.cur=nx.id;S=nx;render();toast('Project complete. Next up: '+nx.title)}
+ else{render();toast('All projects complete. Create a new one above.');$('pn').focus()}};
+$('pdel').onclick=e=>{const b=e.target;
+ if(DB.projects.length<2){toast('Keep at least one project');return}
+ if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Click again to delete';setTimeout(()=>{delete b.dataset.sure;b.textContent='Delete project'},2500);return}
+ DB.projects=DB.projects.filter(p=>p!==S);S=DB.projects.find(p=>!p.done)||DB.projects[0];DB.cur=S.id;
+ delete b.dataset.sure;b.textContent='Delete project';render();toast('Project deleted')};
+render();
+</script>
+</body>
+</html>
